@@ -1,55 +1,30 @@
 import ballerina/io;
 
-function readInput(string filename) returns string[] {
-    string[]|io:Error fileReadLines = io:fileReadLines("./" + filename);
-
-    if (fileReadLines is string[]) {
-        return fileReadLines;
-    } else {
-        io:println("Error reading file: ", fileReadLines.message());
-        return [];
-    }
+function readInput(string filename) returns string[]|error {
+    return io:fileReadLines("./" + filename);
 }
 
-function frmStrErrChk(int|error intToChk) returns int? {
-    if (intToChk is int) {
-        return intToChk;
-    } else {
-        return ();
+public function main() returns error? {
+    string[] lines = check readInput("input.txt");
+    int[] leftValues = [];
+    int[] rightValues = [];
+
+    foreach var line in lines {
+        string[] parts = re `${"\\s"}`.split(line);
+        if parts.length() >= 2 {
+            int left = check int:fromString(parts[0].trim());
+            int right = check int:fromString(parts[parts.length() - 1].trim());
+            leftValues.push(left);
+            rightValues.push(right);
+        }
     }
-}
 
-type LeftRight record {
-    int left;
-    int right;
-};
-
-public function main() {
-
-    var lines = readInput("input.txt");
-    int[] unsortedLeft = [];
-    int[] unsortedRight = [];
-    LeftRight[] lr = [];
-    lines.forEach(function(string line) {
-        unsortedLeft.push(<int>frmStrErrChk(int:fromString(line.substring(0, <int>line.indexOf(" ")).trim())));
-        unsortedRight.push(<int>frmStrErrChk(int:fromString(line.substring(<int>line.lastIndexOf(" ")).trim())));
-    });
-
-    var sortedLeft = unsortedLeft.sort();
-    var sortedRight = unsortedRight.sort();
-
-    int i = 0;
-    while i < sortedLeft.length() {
-        lr.push({
-            left: sortedLeft[i],
-            right: sortedRight[i]
-        });
-        i += 1;     
-    }
+    int[] sortedLeftValues = leftValues.sort();
+    int[] sortedRightValues = rightValues.sort();
 
     int sum = 0;
-    foreach var v in lr {
-        sum += int:abs(v.left - v.right);
+    foreach int i in 0..<(sortedLeftValues.length()) {
+        sum += int:abs(sortedLeftValues[i] - sortedRightValues[i]);
     }
 
     io:println(sum);
